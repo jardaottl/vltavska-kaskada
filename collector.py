@@ -6,6 +6,8 @@ import csv
 import html
 import json
 import re
+import ssl
+import certifi
 import urllib.request
 from datetime import datetime
 from html.parser import HTMLParser
@@ -46,7 +48,7 @@ def fetch():
         "User-Agent": "Mozilla/5.0 (compatible; VltavaCascadeMonitor/1.0)",
         "Accept-Language": "cs-CZ,cs;q=0.9",
     })
-    with urllib.request.urlopen(req, timeout=30) as response:
+    with urllib.request.urlopen(req, timeout=30, context=ssl.create_default_context(cafile=certifi.where())) as response:
         page = response.read().decode(response.headers.get_content_charset() or "utf-8", "replace")
     p = Rows(); p.feed(page)
     found = {}
