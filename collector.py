@@ -48,7 +48,10 @@ def fetch():
         "User-Agent": "Mozilla/5.0 (compatible; VltavaCascadeMonitor/1.0)",
         "Accept-Language": "cs-CZ,cs;q=0.9",
     })
-    with urllib.request.urlopen(req, timeout=30, context=ssl.create_default_context(cafile=certifi.where())) as response:
+    context = ssl.create_default_context(cafile=certifi.where())
+    issuer_der = Path("alpiro-intermediate.crt").read_bytes()
+    context.load_verify_locations(cadata=ssl.DER_cert_to_PEM_cert(issuer_der))
+    with urllib.request.urlopen(req, timeout=30, context=context) as response:    
         page = response.read().decode(response.headers.get_content_charset() or "utf-8", "replace")
     p = Rows(); p.feed(page)
     found = {}
