@@ -17,7 +17,7 @@
   <h1>Objem vody ve Vltavské kaskádě</h1>
   <p class="sub">Součet zaplněného zásobního prostoru devíti nádrží, v milionech m³.</p>
   <section class="card"><div id="total" class="total">Načítám…</div><div id="status" class="status"></div></section>
-  <section class="card"><canvas id="chart" aria-label="Vývoj součtu zaplněného zásobního prostoru"></canvas></section>
+  <section class="card"><canvas id="chart" aria-label="Vývoj součtu zaplněného zásobního prostoru a celková kapacita kaskády"></canvas></section>
   <p class="status">Zdroj: <a href="https://www.pvl.cz/portal/Nadrze/cz/pc/Objemy.aspx">Povodí Vltavy</a>. Údaje PVL jsou bez záruky. <a href="data.csv">Stáhnout CSV</a>.</p>
   <script>
     fetch('data.csv?fresh=' + Date.now()).then(r => { if (!r.ok) throw Error('CSV není dostupné'); return r.text(); })
@@ -28,8 +28,47 @@
         const last = valid[valid.length - 1];
         document.getElementById('total').textContent = Number(last[10]).toLocaleString('cs-CZ',{minimumFractionDigits:3,maximumFractionDigits:3}) + ' mil. m³';
         document.getElementById('status').textContent = 'Poslední měření: ' + new Date(last[0]).toLocaleString('cs-CZ') + ' · ' + valid.length + ' záznamů';
-        new Chart(document.getElementById('chart'), {type:'line',data:{labels:valid.map(r=>r[0]),datasets:[{label:'Zaplněný zásobní prostor (mil. m³)',data:valid.map(r=>Number(r[10])),borderColor:'#087eaa',backgroundColor:'#087eaa22',fill:true,tension:.15,pointRadius:0,borderWidth:2}]},options:{responsive:true,interaction:{intersect:false,mode:'index'},scales:{x:{ticks:{maxTicksLimit:10}},y:{title:{display:true,text:'mil. m³'}}}}});
-      }).catch(e => {document.getElementById('total').textContent='Data zatím nejsou k dispozici'; document.getElementById('status').textContent=e.message;});
+
+        const capacity = 823.27;
+        new Chart(document.getElementById('chart'), {
+          type: 'line',
+          data: {
+            labels: valid.map(r => r[0]),
+            datasets: [
+              {
+                label: 'Zaplněný zásobní prostor (mil. m³)',
+                data: valid.map(r => Number(r[10])),
+                borderColor: '#087eaa',
+                backgroundColor: '#087eaa22',
+                fill: true,
+                tension: .15,
+                pointRadius: 0,
+                borderWidth: 2
+              },
+              {
+                label: 'Celková kapacita: 823,27 mil. m³',
+                data: valid.map(() => capacity),
+                borderColor: '#e07a19',
+                borderDash: [7, 5],
+                pointRadius: 0,
+                borderWidth: 2,
+                fill: false
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            interaction: { intersect: false, mode: 'index' },
+            scales: {
+              x: { ticks: { maxTicksLimit: 10 } },
+              y: { min: 0, max: 850, title: { display: true, text: 'mil. m³' } }
+            }
+          }
+        });
+      }).catch(e => {
+        document.getElementById('total').textContent = 'Data zatím nejsou k dispozici';
+        document.getElementById('status').textContent = e.message;
+      });
   </script>
 </body>
 </html>
