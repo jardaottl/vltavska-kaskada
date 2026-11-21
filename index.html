@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="cs">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Objem vody ve Vltavské kaskádě</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body{font:16px system-ui,sans-serif;max-width:1100px;margin:36px auto;padding:0 18px;color:#17324d;background:#f5f8fb}
+    h1{font-size:clamp(1.5rem,4vw,2.2rem);margin-bottom:6px}.sub{color:#526579;margin-top:0}
+    .card{background:white;border-radius:12px;padding:22px;box-shadow:0 2px 14px #17324d12;margin:20px 0}
+    .total{font-size:2rem;font-weight:700;color:#087eaa}.status{color:#526579;font-size:.9rem}
+    canvas{width:100%;max-height:480px}a{color:#087eaa}
+  </style>
+</head>
+<body>
+  <h1>Objem vody ve Vltavské kaskádě</h1>
+  <p class="sub">Součet zaplněného zásobního prostoru devíti nádrží, v milionech m³.</p>
+  <section class="card"><div id="total" class="total">Načítám…</div><div id="status" class="status"></div></section>
+  <section class="card"><canvas id="chart" aria-label="Vývoj součtu zaplněného zásobního prostoru"></canvas></section>
+  <p class="status">Zdroj: <a href="https://www.pvl.cz/portal/Nadrze/cz/pc/Objemy.aspx">Povodí Vltavy</a>. Údaje PVL jsou bez záruky. <a href="data.csv">Stáhnout CSV</a>.</p>
+  <script>
+    fetch('data.csv?fresh=' + Date.now()).then(r => { if (!r.ok) throw Error('CSV není dostupné'); return r.text(); })
+      .then(text => {
+        const rows = text.trim().split(/\r?\n/).slice(1).map(line => line.split(';'));
+        const valid = rows.filter(r => r.length >= 11 && r[0] && Number.isFinite(Number(r[10])));
+        if (!valid.length) throw Error('Zatím nejsou uložena žádná měření.');
+        const last = valid[valid.length - 1];
+        document.getElementById('total').textContent = Number(last[10]).toLocaleString('cs-CZ',{minimumFractionDigits:3,maximumFractionDigits:3}) + ' mil. m³';
+        document.getElementById('status').textContent = 'Poslední měření: ' + new Date(last[0]).toLocaleString('cs-CZ') + ' · ' + valid.length + ' záznamů';
+        new Chart(document.getElementById('chart'), {type:'line',data:{labels:valid.map(r=>r[0]),datasets:[{label:'Zaplněný zásobní prostor (mil. m³)',data:valid.map(r=>Number(r[10])),borderColor:'#087eaa',backgroundColor:'#087eaa22',fill:true,tension:.15,pointRadius:0,borderWidth:2}]},options:{responsive:true,interaction:{intersect:false,mode:'index'},scales:{x:{ticks:{maxTicksLimit:10}},y:{title:{display:true,text:'mil. m³'}}}}});
+      }).catch(e => {document.getElementById('total').textContent='Data zatím nejsou k dispozici'; document.getElementById('status').textContent=e.message;});
+  </script>
+</body>
+</html>
