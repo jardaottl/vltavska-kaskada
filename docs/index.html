@@ -6,34 +6,104 @@
   <title>Objem vody ve Vltavské kaskádě</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
+    *{box-sizing:border-box}
     body{font:16px system-ui,sans-serif;max-width:1100px;margin:36px auto;padding:0 18px;color:#17324d;background:#f5f8fb}
-    h1{font-size:clamp(1.5rem,4vw,2.2rem);margin-bottom:6px}.sub{color:#526579;margin-top:0}
+    h1{font-size:clamp(1.5rem,4vw,2.2rem);margin-bottom:6px}
+    .sub{color:#526579;margin-top:0}
     .card{background:white;border-radius:12px;padding:22px;box-shadow:0 2px 14px #17324d12;margin:20px 0}
-    .total{font-size:2rem;font-weight:700;color:#087eaa}.status{color:#526579;font-size:.9rem}
-    canvas{width:100%;max-height:480px}a{color:#087eaa}
+    .summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+    .metric-label{color:#526579;font-size:.9rem;margin-bottom:6px}
+    .total{font-size:clamp(1.25rem,3vw,1.8rem);font-weight:700;color:#087eaa}
+    .status{color:#526579;font-size:.9rem;grid-column:1/-1}
+    canvas{width:100%;max-height:480px}
+    a{color:#087eaa}
+    @media(max-width:680px){
+      body{margin:22px auto}
+      .summary{grid-template-columns:1fr;gap:12px}
+    }
   </style>
 </head>
 <body>
   <h1>Objem vody ve Vltavské kaskádě</h1>
   <p class="sub">Součet zaplněného zásobního prostoru devíti nádrží, v milionech m³.</p>
-  <section class="card"><div id="total" class="total">Načítám…</div><div id="status" class="status"></div></section>
-  <section class="card"><canvas id="chart" aria-label="Vývoj součtu zaplněného zásobního prostoru a celková kapacita kaskády"></canvas></section>
-  <p class="status">Zdroj: <a href="https://www.pvl.cz/portal/Nadrze/cz/pc/Objemy.aspx">Povodí Vltavy</a>. Údaje PVL jsou bez záruky. <a href="data.csv">Stáhnout CSV</a>.</p>
+
+  <section class="card summary">
+    <div>
+      <div class="metric-label">Aktuální objem</div>
+      <div id="total" class="total">Načítám…</div>
+    </div>
+    <div>
+      <div class="metric-label">Zaplnění kapacity</div>
+      <div id="percent" class="total">Načítám…</div>
+    </div>
+    <div>
+      <div class="metric-label">Zbývá do plné kapacity</div>
+      <div id="remaining" class="total">Načítám…</div>
+    </div>
+    <div id="status" class="status"></div>
+  </section>
+
+  <section class="card">
+    <canvas id="chart" aria-label="Vývoj součtu zaplněného zásobního prostoru a celková kapacita kaskády"></canvas>
+  </section>
+
+  <p class="status">
+    Zdroj: <a href="https://www.pvl.cz/portal/Nadrze/cz/pc/Objemy.aspx">Povodí Vltavy</a>.
+    Údaje PVL jsou bez záruky. <a href="data.csv">Stáhnout CSV</a>.
+  </p>
+
   <script>
-    fetch('data.csv?fresh=' + Date.now()).then(r => { if (!r.ok) throw Error('CSV není dostupné'); return r.text(); })
+    fetch('data.csv?fresh=' + Date.now())
+      .then(r => {
+        if (!r.ok) throw Error('CSV není dostupné');
+        return r.text();
+      })
       .then(text => {
         const rows = text.trim().split(/\r?\n/).slice(1).map(line => line.split(';'));
         const valid = rows.filter(r => r.length >= 11 && r[0] && Number.isFinite(Number(r[10])));
+
         if (!valid.length) throw Error('Zatím nejsou uložena žádná měření.');
-        const last = valid[valid.length - 1];
-        document.getElementById('total').textContent = Number(last[10]).toLocaleString('cs-CZ',{minimumFractionDigits:3,maximumFractionDigits:3}) + ' mil. m³';
-        document.getElementById('status').textContent = 'Poslední měření: ' + new Date(last[0]).toLocaleString('cs-CZ') + ' · ' + valid.length + ' záznamů';
 
         const capacity = 823.27;
+        const last = valid[valid.length - 1];
+        const current = Number(last[10]);
+        const remaining = Math.max(0, capacity - current);
+
+        const formatVolume = value => value.toLocaleString('cs-CZ', {
+          minimumFractionDigits: 3,
+          maximumFractionDigits: 3
+        });
+
+        document.getElementById('total').textContent =
+          formatVolume(current) + ' mil. m³';
+
+        document.getElementById('percent').textContent =
+          (current / capacity * 100).toLocaleString('cs-CZ', {
+            minimumFractionDigits: 1,
+            maximumFractionDigits: 1
+          }) + ' %';
+
+        document.getElementById('remaining').textContent =
+          formatVolume(remaining) + ' mil. m³';
+
+        document.getElementById('status').textContent =
+          'Poslední měření: ' + new Date(last[0]).toLocaleString('cs-CZ') +
+          ' · ' + valid.length + ' záznamů';
+
+        const chartLabels = valid.map(r =>
+          new Date(r[0]).toLocaleString('cs-CZ', {
+            day: '2-digit',
+            month: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            hourCycle: 'h23'
+          })
+        );
+
         new Chart(document.getElementById('chart'), {
           type: 'line',
           data: {
-            labels: valid.map(r => r[0]),
+            labels: chartLabels,
             datasets: [
               {
                 label: 'Zaplněný zásobní prostor (mil. m³)',
@@ -42,7 +112,8 @@
                 backgroundColor: '#087eaa22',
                 fill: true,
                 tension: .15,
-                pointRadius: 0,
+                pointRadius: valid.length <= 24 ? 3 : 0,
+                pointHoverRadius: 5,
                 borderWidth: 2
               },
               {
@@ -60,13 +131,26 @@
             responsive: true,
             interaction: { intersect: false, mode: 'index' },
             scales: {
-              x: { ticks: { maxTicksLimit: 10 } },
-              y: { min: 0, max: 850, title: { display: true, text: 'mil. m³' } }
+              x: {
+                ticks: {
+                  maxTicksLimit: 8,
+                  maxRotation: 0,
+                  minRotation: 0
+                }
+              },
+              y: {
+                min: 0,
+                max: 850,
+                title: { display: true, text: 'mil. m³' }
+              }
             }
           }
         });
-      }).catch(e => {
+      })
+      .catch(e => {
         document.getElementById('total').textContent = 'Data zatím nejsou k dispozici';
+        document.getElementById('percent').textContent = '—';
+        document.getElementById('remaining').textContent = '—';
         document.getElementById('status').textContent = e.message;
       });
   </script>
