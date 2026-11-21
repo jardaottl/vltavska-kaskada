@@ -49,8 +49,8 @@ def fetch():
         "Accept-Language": "cs-CZ,cs;q=0.9",
     })
     context = ssl.create_default_context(cafile=certifi.where())
-    issuer_der = Path("alpiro-intermediate.crt").read_bytes()
-    context.load_verify_locations(cadata=ssl.DER_cert_to_PEM_cert(issuer_der))
+    issuer_pem = Path("alpiro-intermediate.crt").read_text(encoding="ascii")
+    context.load_verify_locations(cadata=issuer_pem)    
     with urllib.request.urlopen(req, timeout=30, context=context) as response:    
         page = response.read().decode(response.headers.get_content_charset() or "utf-8", "replace")
     p = Rows(); p.feed(page)
