@@ -15,11 +15,19 @@
     .metric-label{color:#526579;font-size:.9rem;margin-bottom:6px}
     .total{font-size:clamp(1.25rem,3vw,1.8rem);font-weight:700;color:#087eaa}
     .status{color:#526579;font-size:.9rem;grid-column:1/-1}
-    canvas{width:100%;max-height:480px}
+    .chart-wrap{position:relative;width:100%;height:480px}
     a{color:#087eaa}
+
     @media(max-width:680px){
-      body{margin:22px auto}
-      .summary{grid-template-columns:1fr;gap:12px}
+      body{margin:18px auto;padding:0 12px;font-size:15px}
+      h1{font-size:1.65rem;line-height:1.2}
+      .card{padding:16px;border-radius:10px;margin:14px 0}
+      .summary{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+      .summary>div:first-child{grid-column:1/-1}
+      .metric-label{font-size:.82rem}
+      .total{font-size:clamp(1.05rem,5vw,1.45rem);overflow-wrap:anywhere}
+      .status{font-size:.82rem}
+      .chart-wrap{height:440px}
     }
   </style>
 </head>
@@ -44,7 +52,9 @@
   </section>
 
   <section class="card">
-    <canvas id="chart" aria-label="Vývoj objemu vody v jednotlivých nádržích Vltavské kaskády"></canvas>
+    <div class="chart-wrap">
+      <canvas id="chart" aria-label="Vývoj objemu vody v jednotlivých nádržích Vltavské kaskády"></canvas>
+    </div>
   </section>
 
   <p class="status">
@@ -140,7 +150,10 @@
           fill: false
         });
 
-        new Chart(document.getElementById('chart'), {
+        const mobileQuery = window.matchMedia('(max-width: 680px)');
+        const isMobile = mobileQuery.matches;
+
+        const chart = new Chart(document.getElementById('chart'), {
           type: 'line',
           data: {
             labels: chartLabels,
@@ -148,9 +161,18 @@
           },
           options: {
             responsive: true,
+            maintainAspectRatio: false,
             interaction: { intersect: false, mode: 'index' },
             plugins: {
-              legend: { position: 'top' },
+              legend: {
+                position: isMobile ? 'bottom' : 'top',
+                labels: {
+                  boxWidth: isMobile ? 12 : 40,
+                  boxHeight: 12,
+                  padding: isMobile ? 8 : 10,
+                  font: { size: isMobile ? 10 : 12 }
+                }
+              },
               tooltip: {
                 callbacks: {
                   label: context =>
@@ -167,9 +189,10 @@
             scales: {
               x: {
                 ticks: {
-                  maxTicksLimit: 8,
+                  maxTicksLimit: isMobile ? 4 : 8,
                   maxRotation: 0,
-                  minRotation: 0
+                  minRotation: 0,
+                  font: { size: isMobile ? 10 : 12 }
                 }
               },
               y: {
@@ -187,6 +210,17 @@
               }
             }
           }
+        });
+
+        mobileQuery.addEventListener('change', event => {
+          const small = event.matches;
+          chart.options.plugins.legend.position = small ? 'bottom' : 'top';
+          chart.options.plugins.legend.labels.boxWidth = small ? 12 : 40;
+          chart.options.plugins.legend.labels.padding = small ? 8 : 10;
+          chart.options.plugins.legend.labels.font.size = small ? 10 : 12;
+          chart.options.scales.x.ticks.maxTicksLimit = small ? 4 : 8;
+          chart.options.scales.x.ticks.font.size = small ? 10 : 12;
+          chart.update('none');
         });
       })
       .catch(e => {
