@@ -1,33 +1,42 @@
 name: Hourly Vltava Cascade data
+
 on:
   schedule:
     - cron: '7 * * * *'
   workflow_dispatch:
   push:
     branches: [main]
+
 permissions:
-  contents: write
-  pages: write
-  id-token: write
+  contents: read
+
 concurrency:
   group: vltava-cascade-pages
   cancel-in-progress: false
+
 jobs:
   collect-and-publish:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+
       - name: Install certifi
         run: python -m pip install certifi
+
       - name: Download PVL issuer certificate
         run: curl -fsSL https://www.alpirossl.cz/download/AlpiroRSADVSSLCA2.crt -o alpiro-intermediate.crt
+
       - name: Collect current PVL values
-        run: python collector.py      
+        run: python collector.py
+
       - name: Save measurement history
         run: |
           git config user.name "github-actions[bot]"
@@ -35,7 +44,22 @@ jobs:
           git add docs/data.csv
           git diff --cached --quiet || git commit -m "Record hourly Vltava Cascade volumes"
           git push
-      - uses: actions/upload-pages-artifact@v4
+
+      - name: Upload website
+        uses: actions/upload-pages-artifact@v4
         with:
           path: docs
-      - uses: actions/deploy-pages@v4
+
+  deploy:
+    needs: collect-and-publish
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy website
+        id: deployment
+        uses: actions/deploy-pages@v4
