@@ -56,11 +56,9 @@
     @media(max-width:900px){
       .chart-legend{grid-template-columns:repeat(3,minmax(0,1fr))}
     }
-
     @media(max-width:800px){
       .summary{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
     }
-
     @media(max-width:680px){
       body{margin:22px auto}
       .card{padding:16px}
@@ -143,7 +141,6 @@
         document.getElementById('remaining').textContent =
           formatVolume(remaining) + ' mil. m³';
 
-        // Najde měření nejblíže okamžiku 24 hodin před posledním záznamem.
         const latestTime = new Date(last[0]).getTime();
         const targetTime = latestTime - 24 * 60 * 60 * 1000;
         const earlierRows = valid.slice(0, -1);
@@ -163,7 +160,6 @@
 
         const balanceElement = document.getElementById('balance');
 
-        // Pokud není měření dostatečně blízko 24hodinovému cíli, bilanci neuvádíme.
         if (baseline && baselineDistance <= 90 * 60 * 1000) {
           const difference = current - Number(baseline[10]);
           const sign = difference > 0 ? '+' : difference < 0 ? '−' : '';
@@ -245,10 +241,14 @@
             plugins: {
               legend: { display: false },
               tooltip: {
+                bodyFont: { family: 'monospace' },
+                footerFont: { family: 'monospace', weight: 'bold' },
                 callbacks: {
-                  label: context =>
-                    context.dataset.label + ': ' +
-                    formatVolume(Number(context.raw)) + ' mil. m³',
+                  label: context => {
+                    const name = (context.dataset.label + ':').padEnd(19, ' ');
+                    const value = formatVolume(Number(context.raw)).padStart(7, ' ');
+                    return name + value + ' mil. m³';
+                  },
                   footer: items => {
                     if (!items.length) return '';
                     const rowIndex = items[0].dataIndex;
