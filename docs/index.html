@@ -17,10 +17,45 @@
     .status{color:#526579;font-size:.9rem;grid-column:1/-1}
     canvas{width:100%;max-height:480px}
     a{color:#087eaa}
-    .chart-legend{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:18px}
-    .chart-legend button{display:flex;align-items:center;gap:8px;text-align:left;background:#f5f8fb;border:1px solid #d9e2eb;border-radius:8px;padding:9px;min-width:0;color:#17324d;font:inherit;cursor:pointer}
-    .chart-legend button.is-hidden{opacity:.45;text-decoration:line-through}
-    .legend-swatch{width:18px;height:12px;flex:none;border:2px solid;border-radius:2px}
+
+    .chart-legend{
+      display:grid;
+      grid-template-columns:repeat(5,minmax(0,1fr));
+      gap:5px;
+      margin-bottom:12px
+    }
+    .chart-legend button{
+      display:flex;
+      align-items:center;
+      gap:6px;
+      min-width:0;
+      padding:6px 7px;
+      overflow:hidden;
+      white-space:nowrap;
+      text-align:left;
+      background:#f5f8fb;
+      border:1px solid #d9e2eb;
+      border-radius:8px;
+      color:#17324d;
+      font:inherit;
+      font-size:.78rem;
+      cursor:pointer
+    }
+    .chart-legend button.is-hidden{
+      opacity:.45;
+      text-decoration:line-through
+    }
+    .legend-swatch{
+      width:15px;
+      height:11px;
+      flex:none;
+      border:2px solid;
+      border-radius:2px
+    }
+
+    @media(max-width:900px){
+      .chart-legend{grid-template-columns:repeat(3,minmax(0,1fr))}
+    }
 
     @media(max-width:800px){
       .summary{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
@@ -128,8 +163,7 @@
 
         const balanceElement = document.getElementById('balance');
 
-        // Při běžném hodinovém sběru je měření nejvýše zhruba hodinu od cíle.
-        // Pokud je mezera větší než 90 minut, raději bilanci neuvádíme.
+        // Pokud není měření dostatečně blízko 24hodinovému cíli, bilanci neuvádíme.
         if (baseline && baselineDistance <= 90 * 60 * 1000) {
           const difference = current - Number(baseline[10]);
           const sign = difference > 0 ? '+' : difference < 0 ? '−' : '';
