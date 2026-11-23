@@ -48,9 +48,11 @@
     }
 
     .total {
-      font-size: clamp(1.15rem, 2.5vw, 1.8rem);
+      font-size: clamp(1.05rem, 2.2vw, 1.65rem);
+      line-height: 1.2;
       font-weight: 700;
       color: #087eaa;
+      overflow-wrap: anywhere;
     }
 
     .balance-up { color: #168a55 }
@@ -71,7 +73,7 @@
 
     .chart-legend {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(5, minmax(0, 1fr));
       gap: 8px;
       margin-bottom: 18px;
     }
@@ -108,6 +110,13 @@
       border-radius: 2px;
     }
 
+    .legend-swatch.capacity-swatch {
+      height: 0;
+      border: 0;
+      border-top: 3px dashed #e07a19;
+      border-radius: 0;
+    }
+
     .chart-wrap {
       position: relative;
       height: 480px;
@@ -115,20 +124,14 @@
 
     a { color: #087eaa }
 
-    @media (max-width: 800px) {
+    @media (max-width: 900px) {
       .summary {
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 14px;
       }
 
       .chart-legend {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 6px;
-      }
-
-      .chart-legend button {
-        font-size: .85rem;
-        padding: 8px;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
       }
 
       .chart-wrap {
@@ -151,7 +154,17 @@
       }
 
       .total {
-        font-size: clamp(1rem, 4.5vw, 1.35rem);
+        font-size: clamp(.95rem, 4vw, 1.25rem);
+      }
+
+      .chart-legend {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 6px;
+      }
+
+      .chart-legend button {
+        font-size: .85rem;
+        padding: 8px;
       }
 
       .chart-wrap {
@@ -181,16 +194,40 @@
     </div>
 
     <div>
-      <div class="metric-label">Bilance za přibližně 24 hodin</div>
-      <div id="balance" class="total">Načítám…</div>
-      <div id="balanceDetail" class="metric-detail"></div>
+      <div class="metric-label">Bilance za 24 hodin</div>
+      <div id="balance24" class="total">Načítám…</div>
+      <div id="balance24Detail" class="metric-detail"></div>
+    </div>
+
+    <div>
+      <div class="metric-label">Bilance za 3 dny</div>
+      <div id="balance3" class="total">Načítám…</div>
+      <div id="balance3Detail" class="metric-detail"></div>
+    </div>
+
+    <div>
+      <div class="metric-label">Bilance za 7 dní</div>
+      <div id="balance7" class="total">Načítám…</div>
+      <div id="balance7Detail" class="metric-detail"></div>
+    </div>
+
+    <div>
+      <div class="metric-label">Bilance za 15 dní</div>
+      <div id="balance15" class="total">Načítám…</div>
+      <div id="balance15Detail" class="metric-detail"></div>
+    </div>
+
+    <div>
+      <div class="metric-label">Bilance za 31 dní</div>
+      <div id="balance31" class="total">Načítám…</div>
+      <div id="balance31Detail" class="metric-detail"></div>
     </div>
 
     <div id="status" class="status"></div>
   </section>
 
   <section class="card">
-    <div id="chartLegend" class="chart-legend" aria-label="Zobrazit nebo skrýt nádrže"></div>
+    <div id="chartLegend" class="chart-legend" aria-label="Zobrazit nebo skrýt položky grafu"></div>
     <div class="chart-wrap">
       <canvas id="chart" aria-label="Vývoj objemu vody v jednotlivých nádržích Vltavské kaskády"></canvas>
     </div>
@@ -230,6 +267,7 @@
         const capacity = 823.27;
         const last = valid[valid.length - 1];
         const current = Number(last[10]);
+        const latestTime = Date.parse(last[0]);
         const remaining = Math.max(0, capacity - current);
 
         const formatVolume = value =>
@@ -255,58 +293,75 @@
           new Date(last[0]).toLocaleString('cs-CZ') +
           ' · ' + valid.length + ' záznamů';
 
-        // Najde měření nejbližší okamžiku před 24 hodinami.
-        const latestTime = Date.parse(last[0]);
-        const targetTime = latestTime - 24 * 60 * 60 * 1000;
+        function showBalance(days, id) {
+          const periodMs = days * 24 * 60 * 60 * 1000;
+          const targetTime = latestTime - periodMs;
+          const toleranceMs = 3 * 60 * 60 * 1000;
+          const oldestTime = Date.parse(valid[0][0]);
 
-        const reference = valid
-          .slice(0, -1)
-          .map(row => ({
-            row,
-            time: Date.parse(row[0])
-          }))
-          .reduce((best, item) => {
-            if (!best) return item;
+          const valueElement = document.getElementById(id);
+          const detailElement = document.getElementById(id + 'Detail');
 
-            return Math.abs(item.time - targetTime) <
-                   Math.abs(best.time - targetTime)
-              ? item
-              : best;
-          }, null);
+          valueElement.classList.remove(
+            'balance-up',
+            'balance-down',
+            'balance-same'
+          );
 
-        const balanceElement = document.getElementById('balance');
-        const balanceDetail = document.getElementById('balanceDetail');
+          if (latestTime - oldestTime < periodMs - toleranceMs) {
+            valueElement.textContent = 'Zatím není k dispozici';
+            detailElement.textContent = 'Historie zatím nepokrývá toto období.';
+            valueElement.classList.add('balance-same');
+            return;
+          }
 
-        if (
-          reference &&
-          Math.abs(reference.time - targetTime) <= 90 * 60 * 1000
-        ) {
+          const reference = valid
+            .slice(0, -1)
+            .map(row => ({
+              row,
+              time: Date.parse(row[0])
+            }))
+            .reduce((best, item) => {
+              if (!best) return item;
+
+              return Math.abs(item.time - targetTime) <
+                     Math.abs(best.time - targetTime)
+                ? item
+                : best;
+            }, null);
+
+          if (!reference || Math.abs(reference.time - targetTime) > toleranceMs) {
+            valueElement.textContent = 'Zatím není k dispozici';
+            detailElement.textContent = 'V okolí cílového času chybí měření.';
+            valueElement.classList.add('balance-same');
+            return;
+          }
+
           const difference = current - Number(reference.row[10]);
           const elapsedHours = (latestTime - reference.time) / (60 * 60 * 1000);
           const sign = difference > 0 ? '+' : difference < 0 ? '−' : '';
 
-          balanceElement.textContent =
+          valueElement.textContent =
             sign + formatVolume(Math.abs(difference)) + ' mil. m³';
 
-          balanceElement.classList.remove('balance-up', 'balance-down', 'balance-same');
-
           if (difference > 0) {
-            balanceElement.classList.add('balance-up');
+            valueElement.classList.add('balance-up');
           } else if (difference < 0) {
-            balanceElement.classList.add('balance-down');
+            valueElement.classList.add('balance-down');
           } else {
-            balanceElement.classList.add('balance-same');
+            valueElement.classList.add('balance-same');
           }
 
-          balanceDetail.textContent =
+          detailElement.textContent =
             'Oproti měření před přibližně ' +
             Math.round(elapsedHours) + ' h';
-        } else {
-          balanceElement.textContent = 'Zatím není k dispozici';
-          balanceDetail.textContent =
-            'Pro výpočet je potřeba měření zhruba 24 hodin zpět.';
-          balanceElement.classList.add('balance-same');
         }
+
+        showBalance(1, 'balance24');
+        showBalance(3, 'balance3');
+        showBalance(7, 'balance7');
+        showBalance(15, 'balance15');
+        showBalance(31, 'balance31');
 
         const chartLabels = valid.map(row =>
           new Date(row[0]).toLocaleString('cs-CZ', {
@@ -342,6 +397,8 @@
           pointRadius: 0,
           pointHoverRadius: 5
         }));
+
+        const capacityIndex = datasets.length;
 
         datasets.push({
           label: 'Celková kapacita: 823,27 mil. m³',
@@ -418,7 +475,7 @@
 
         const legend = document.getElementById('chartLegend');
 
-        reservoirs.forEach((dam, index) => {
+        function addLegendButton(labelText, color, datasetIndex, isCapacity = false) {
           const button = document.createElement('button');
           const swatch = document.createElement('span');
           const label = document.createElement('span');
@@ -426,19 +483,24 @@
           button.type = 'button';
           button.setAttribute('aria-pressed', 'true');
 
-          swatch.className = 'legend-swatch';
-          swatch.style.borderColor = dam.color;
-          swatch.style.backgroundColor = dam.color;
+          swatch.className = isCapacity
+            ? 'legend-swatch capacity-swatch'
+            : 'legend-swatch';
 
-          label.textContent = dam.name;
+          if (!isCapacity) {
+            swatch.style.borderColor = color;
+            swatch.style.backgroundColor = color;
+          }
+
+          label.textContent = labelText;
 
           button.appendChild(swatch);
           button.appendChild(label);
 
           button.addEventListener('click', () => {
-            const visible = chart.isDatasetVisible(index);
+            const visible = chart.isDatasetVisible(datasetIndex);
 
-            chart.setDatasetVisibility(index, !visible);
+            chart.setDatasetVisibility(datasetIndex, !visible);
             button.classList.toggle('is-hidden', visible);
             button.setAttribute('aria-pressed', String(!visible));
 
@@ -446,16 +508,31 @@
           });
 
           legend.appendChild(button);
+        }
+
+        reservoirs.forEach((dam, index) => {
+          addLegendButton(dam.name, dam.color, index);
         });
+
+        addLegendButton(
+          'Celková kapacita: 823,27 mil. m³',
+          '#e07a19',
+          capacityIndex,
+          true
+        );
       })
       .catch(error => {
         document.getElementById('total').textContent =
           'Data zatím nejsou k dispozici';
         document.getElementById('percent').textContent = '—';
         document.getElementById('remaining').textContent = '—';
-        document.getElementById('balance').textContent = '—';
-        document.getElementById('balanceDetail').textContent = '';
         document.getElementById('status').textContent = error.message;
+
+        ['balance24', 'balance3', 'balance7', 'balance15', 'balance31']
+          .forEach(id => {
+            document.getElementById(id).textContent = '—';
+            document.getElementById(id + 'Detail').textContent = '';
+          });
       });
   </script>
 </body>
