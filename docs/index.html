@@ -37,7 +37,7 @@
 
     .summary {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 18px;
     }
 
@@ -69,6 +69,53 @@
       color: #526579;
       font-size: .9rem;
       grid-column: 1 / -1;
+    }
+
+    .balance-title {
+      margin: 0 0 4px;
+      font-size: 1.25rem;
+    }
+
+    .balance-subtitle {
+      color: #526579;
+      margin: 0;
+    }
+
+    .balance-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 0;
+      margin-top: 18px;
+    }
+
+    .balance-item {
+      min-width: 0;
+      padding: 8px 12px;
+      text-align: center;
+      border-right: 1px solid #d9e2eb;
+    }
+
+    .balance-item:last-child {
+      border-right: 0;
+    }
+
+    .balance-item .metric-label {
+      font-weight: 600;
+    }
+
+    .balance-item .total {
+      font-size: clamp(1rem, 1.9vw, 1.4rem);
+    }
+
+    .balance-item .metric-detail {
+      min-height: 2.4em;
+    }
+
+    .balance-note {
+      color: #526579;
+      font-size: .85rem;
+      text-align: center;
+      margin: 14px 0 0;
     }
 
     .chart-legend {
@@ -130,6 +177,18 @@
         gap: 14px;
       }
 
+      .balance-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .balance-item:nth-child(3) {
+        border-right: 0;
+      }
+
+      .balance-item:nth-child(n + 4) {
+        border-top: 1px solid #d9e2eb;
+      }
+
       .chart-legend {
         grid-template-columns: repeat(3, minmax(0, 1fr));
       }
@@ -155,6 +214,34 @@
 
       .total {
         font-size: clamp(.95rem, 4vw, 1.25rem);
+      }
+
+      .balance-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .balance-item {
+        padding: 10px 6px;
+      }
+
+      .balance-item:nth-child(3) {
+        border-right: 1px solid #d9e2eb;
+      }
+
+      .balance-item:nth-child(2n) {
+        border-right: 0;
+      }
+
+      .balance-item:nth-child(n + 3) {
+        border-top: 1px solid #d9e2eb;
+      }
+
+      .balance-item .total {
+        font-size: clamp(.95rem, 4vw, 1.2rem);
+      }
+
+      .balance-item .metric-detail {
+        min-height: 0;
       }
 
       .chart-legend {
@@ -193,37 +280,48 @@
       <div id="remaining" class="total">Načítám…</div>
     </div>
 
-    <div>
-      <div class="metric-label">Bilance za 24 hodin</div>
-      <div id="balance24" class="total">Načítám…</div>
-      <div id="balance24Detail" class="metric-detail"></div>
-    </div>
-
-    <div>
-      <div class="metric-label">Bilance za 3 dny</div>
-      <div id="balance3" class="total">Načítám…</div>
-      <div id="balance3Detail" class="metric-detail"></div>
-    </div>
-
-    <div>
-      <div class="metric-label">Bilance za 7 dní</div>
-      <div id="balance7" class="total">Načítám…</div>
-      <div id="balance7Detail" class="metric-detail"></div>
-    </div>
-
-    <div>
-      <div class="metric-label">Bilance za 15 dní</div>
-      <div id="balance15" class="total">Načítám…</div>
-      <div id="balance15Detail" class="metric-detail"></div>
-    </div>
-
-    <div>
-      <div class="metric-label">Bilance za 31 dní</div>
-      <div id="balance31" class="total">Načítám…</div>
-      <div id="balance31Detail" class="metric-detail"></div>
-    </div>
-
     <div id="status" class="status"></div>
+  </section>
+
+  <section class="card">
+    <h2 class="balance-title">Bilance objemu vody</h2>
+    <p class="balance-subtitle">Změna oproti měření před daným obdobím.</p>
+
+    <div class="balance-grid">
+      <div class="balance-item">
+        <div class="metric-label">24 hodin</div>
+        <div id="balance24" class="total">Načítám…</div>
+        <div id="balance24Detail" class="metric-detail"></div>
+      </div>
+
+      <div class="balance-item">
+        <div class="metric-label">3 dny</div>
+        <div id="balance3" class="total">Načítám…</div>
+        <div id="balance3Detail" class="metric-detail"></div>
+      </div>
+
+      <div class="balance-item">
+        <div class="metric-label">7 dní</div>
+        <div id="balance7" class="total">Načítám…</div>
+        <div id="balance7Detail" class="metric-detail"></div>
+      </div>
+
+      <div class="balance-item">
+        <div class="metric-label">15 dní</div>
+        <div id="balance15" class="total">Načítám…</div>
+        <div id="balance15Detail" class="metric-detail"></div>
+      </div>
+
+      <div class="balance-item">
+        <div class="metric-label">31 dní</div>
+        <div id="balance31" class="total">Načítám…</div>
+        <div id="balance31Detail" class="metric-detail"></div>
+      </div>
+    </div>
+
+    <p class="balance-note">
+      Pomlčka znamená, že historie zatím nepokrývá dané období.
+    </p>
   </section>
 
   <section class="card">
@@ -309,8 +407,8 @@
           );
 
           if (latestTime - oldestTime < periodMs - toleranceMs) {
-            valueElement.textContent = 'Zatím není k dispozici';
-            detailElement.textContent = 'Historie zatím nepokrývá toto období.';
+            valueElement.textContent = '—';
+            detailElement.textContent = '';
             valueElement.classList.add('balance-same');
             return;
           }
@@ -331,8 +429,8 @@
             }, null);
 
           if (!reference || Math.abs(reference.time - targetTime) > toleranceMs) {
-            valueElement.textContent = 'Zatím není k dispozici';
-            detailElement.textContent = 'V okolí cílového času chybí měření.';
+            valueElement.textContent = '—';
+            detailElement.textContent = '';
             valueElement.classList.add('balance-same');
             return;
           }
