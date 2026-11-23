@@ -11,7 +11,7 @@
     body {
       font: 16px system-ui, sans-serif;
       max-width: 1100px;
-      margin: 36px auto;
+      margin: 12px auto;
       padding: 0 18px;
       color: #17324d;
       background: #f5f8fb;
@@ -19,32 +19,32 @@
 
     h1 {
       font-size: clamp(1.5rem, 4vw, 2.2rem);
-      margin-bottom: 6px;
+      margin: 0 0 4px;
     }
 
     .sub {
       color: #526579;
-      margin-top: 0;
+      margin: 0 0 10px;
     }
 
     .card {
       background: white;
       border-radius: 12px;
-      padding: 22px;
+      padding: 14px;
       box-shadow: 0 2px 14px #17324d12;
-      margin: 20px 0;
+      margin: 10px 0;
     }
 
     .summary {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 18px;
+      gap: 10px 16px;
     }
 
     .metric-label {
       color: #526579;
       font-size: .9rem;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
     }
 
     .total {
@@ -59,12 +59,6 @@
     .balance-down { color: #c33d3d }
     .balance-same { color: #526579 }
 
-    .metric-detail {
-      color: #526579;
-      font-size: .8rem;
-      margin-top: 5px;
-    }
-
     .status {
       color: #526579;
       font-size: .9rem;
@@ -72,25 +66,20 @@
     }
 
     .balance-title {
-      margin: 0 0 4px;
-      font-size: 1.25rem;
-    }
-
-    .balance-subtitle {
-      color: #526579;
       margin: 0;
+      font-size: 1.15rem;
     }
 
     .balance-grid {
       display: grid;
       grid-template-columns: repeat(5, minmax(0, 1fr));
       gap: 0;
-      margin-top: 18px;
+      margin-top: 8px;
     }
 
     .balance-item {
       min-width: 0;
-      padding: 8px 12px;
+      padding: 4px 8px;
       text-align: center;
       border-right: 1px solid #d9e2eb;
     }
@@ -104,39 +93,29 @@
     }
 
     .balance-item .total {
-      font-size: clamp(1rem, 1.9vw, 1.4rem);
-    }
-
-    .balance-item .metric-detail {
-      min-height: 2.4em;
-    }
-
-    .balance-note {
-      color: #526579;
-      font-size: .85rem;
-      text-align: center;
-      margin: 14px 0 0;
+      font-size: clamp(1rem, 1.7vw, 1.35rem);
     }
 
     .chart-legend {
       display: grid;
       grid-template-columns: repeat(5, minmax(0, 1fr));
-      gap: 8px;
-      margin-bottom: 18px;
+      gap: 5px;
+      margin-bottom: 8px;
     }
 
     .chart-legend button {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 7px;
       text-align: left;
       background: #f5f8fb;
       border: 1px solid #d9e2eb;
       border-radius: 8px;
-      padding: 9px;
+      padding: 6px 8px;
       min-width: 0;
       color: #17324d;
       font: inherit;
+      font-size: .84rem;
       cursor: pointer;
     }
 
@@ -150,8 +129,8 @@
     }
 
     .legend-swatch {
-      width: 18px;
-      height: 12px;
+      width: 16px;
+      height: 11px;
       flex: none;
       border: 2px solid;
       border-radius: 2px;
@@ -166,7 +145,7 @@
 
     .chart-wrap {
       position: relative;
-      height: 480px;
+      height: clamp(240px, 28vh, 320px);
     }
 
     a { color: #087eaa }
@@ -174,7 +153,6 @@
     @media (max-width: 900px) {
       .summary {
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 14px;
       }
 
       .balance-grid {
@@ -194,22 +172,22 @@
       }
 
       .chart-wrap {
-        height: 420px;
+        height: 280px;
       }
     }
 
     @media (max-width: 480px) {
       body {
-        margin: 22px auto;
+        margin: 18px auto;
         padding: 0 12px;
       }
 
       .card {
-        padding: 16px;
+        padding: 12px;
       }
 
       .summary {
-        gap: 12px;
+        gap: 10px;
       }
 
       .total {
@@ -221,7 +199,7 @@
       }
 
       .balance-item {
-        padding: 10px 6px;
+        padding: 8px 5px;
       }
 
       .balance-item:nth-child(3) {
@@ -240,22 +218,18 @@
         font-size: clamp(.95rem, 4vw, 1.2rem);
       }
 
-      .balance-item .metric-detail {
-        min-height: 0;
-      }
-
       .chart-legend {
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 6px;
+        gap: 5px;
       }
 
       .chart-legend button {
-        font-size: .85rem;
-        padding: 8px;
+        font-size: .8rem;
+        padding: 6px;
       }
 
       .chart-wrap {
-        height: 380px;
+        height: 240px;
       }
     }
   </style>
@@ -285,43 +259,33 @@
 
   <section class="card">
     <h2 class="balance-title">Bilance objemu vody</h2>
-    <p class="balance-subtitle">Změna oproti měření před daným obdobím.</p>
 
     <div class="balance-grid">
       <div class="balance-item">
         <div class="metric-label">24 hodin</div>
         <div id="balance24" class="total">Načítám…</div>
-        <div id="balance24Detail" class="metric-detail"></div>
       </div>
 
       <div class="balance-item">
         <div class="metric-label">3 dny</div>
         <div id="balance3" class="total">Načítám…</div>
-        <div id="balance3Detail" class="metric-detail"></div>
       </div>
 
       <div class="balance-item">
         <div class="metric-label">7 dní</div>
         <div id="balance7" class="total">Načítám…</div>
-        <div id="balance7Detail" class="metric-detail"></div>
       </div>
 
       <div class="balance-item">
         <div class="metric-label">15 dní</div>
         <div id="balance15" class="total">Načítám…</div>
-        <div id="balance15Detail" class="metric-detail"></div>
       </div>
 
       <div class="balance-item">
         <div class="metric-label">31 dní</div>
         <div id="balance31" class="total">Načítám…</div>
-        <div id="balance31Detail" class="metric-detail"></div>
       </div>
     </div>
-
-    <p class="balance-note">
-      Pomlčka znamená, že historie zatím nepokrývá dané období.
-    </p>
   </section>
 
   <section class="card">
@@ -398,7 +362,6 @@
           const oldestTime = Date.parse(valid[0][0]);
 
           const valueElement = document.getElementById(id);
-          const detailElement = document.getElementById(id + 'Detail');
 
           valueElement.classList.remove(
             'balance-up',
@@ -408,7 +371,6 @@
 
           if (latestTime - oldestTime < periodMs - toleranceMs) {
             valueElement.textContent = '—';
-            detailElement.textContent = '';
             valueElement.classList.add('balance-same');
             return;
           }
@@ -430,13 +392,11 @@
 
           if (!reference || Math.abs(reference.time - targetTime) > toleranceMs) {
             valueElement.textContent = '—';
-            detailElement.textContent = '';
             valueElement.classList.add('balance-same');
             return;
           }
 
           const difference = current - Number(reference.row[10]);
-          const elapsedHours = (latestTime - reference.time) / (60 * 60 * 1000);
           const sign = difference > 0 ? '+' : difference < 0 ? '−' : '';
 
           valueElement.textContent =
@@ -449,10 +409,6 @@
           } else {
             valueElement.classList.add('balance-same');
           }
-
-          detailElement.textContent =
-            'Oproti měření před přibližně ' +
-            Math.round(elapsedHours) + ' h';
         }
 
         showBalance(1, 'balance24');
@@ -629,7 +585,6 @@
         ['balance24', 'balance3', 'balance7', 'balance15', 'balance31']
           .forEach(id => {
             document.getElementById(id).textContent = '—';
-            document.getElementById(id + 'Detail').textContent = '';
           });
       });
   </script>
