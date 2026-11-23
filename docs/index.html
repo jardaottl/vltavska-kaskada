@@ -6,36 +6,157 @@
   <title>Objem vody ve Vltavské kaskádě</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    *{box-sizing:border-box}
-    body{font:16px system-ui,sans-serif;max-width:1100px;margin:36px auto;padding:0 18px;color:#17324d;background:#f5f8fb}
-    h1{font-size:clamp(1.5rem,4vw,2.2rem);margin-bottom:6px}
-    .sub{color:#526579;margin-top:0}
-    .card{background:white;border-radius:12px;padding:22px;box-shadow:0 2px 14px #17324d12;margin:20px 0}
-    .summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}
-    .metric-label{color:#526579;font-size:.9rem;margin-bottom:6px}
-    .total{font-size:clamp(1.2rem,2.4vw,1.8rem);font-weight:700;color:#087eaa;overflow-wrap:anywhere}
-    .balance-positive{color:#168a78}
-    .balance-negative{color:#c34a36}
-    .balance-neutral{color:#526579}
-    .status{color:#526579;font-size:.9rem;grid-column:1/-1}
-    .chart-legend{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-bottom:18px}
-    .chart-legend button{display:flex;align-items:center;gap:8px;text-align:left;background:#f5f8fb;border:1px solid #d9e2eb;border-radius:8px;padding:9px;min-width:0;color:#17324d;font:inherit;cursor:pointer}
-    .chart-legend button.is-hidden{opacity:.45;text-decoration:line-through}
-    .legend-swatch{width:18px;height:12px;flex:none;border:2px solid;border-radius:2px}
-    canvas{width:100%;max-height:480px}
-    a{color:#087eaa}
-    @media(max-width:850px){
-      body{margin:28px auto}
-      .summary{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
-      .chart-legend{grid-template-columns:repeat(3,minmax(0,1fr))}
+    * { box-sizing: border-box }
+
+    body {
+      font: 16px system-ui, sans-serif;
+      max-width: 1100px;
+      margin: 36px auto;
+      padding: 0 18px;
+      color: #17324d;
+      background: #f5f8fb;
     }
-    @media(max-width:520px){
-      body{margin:22px auto;padding:0 14px}
-      .card{padding:18px}
-      .summary{grid-template-columns:1fr;gap:12px}
-      .chart-legend{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
-      .chart-legend button{font-size:.85rem;padding:8px}
-      canvas{max-height:420px}
+
+    h1 {
+      font-size: clamp(1.5rem, 4vw, 2.2rem);
+      margin-bottom: 6px;
+    }
+
+    .sub {
+      color: #526579;
+      margin-top: 0;
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 22px;
+      box-shadow: 0 2px 14px #17324d12;
+      margin: 20px 0;
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .metric-label {
+      color: #526579;
+      font-size: .9rem;
+      margin-bottom: 6px;
+    }
+
+    .total {
+      font-size: clamp(1.15rem, 2.5vw, 1.8rem);
+      font-weight: 700;
+      color: #087eaa;
+    }
+
+    .balance-up { color: #168a55 }
+    .balance-down { color: #c33d3d }
+    .balance-same { color: #526579 }
+
+    .metric-detail {
+      color: #526579;
+      font-size: .8rem;
+      margin-top: 5px;
+    }
+
+    .status {
+      color: #526579;
+      font-size: .9rem;
+      grid-column: 1 / -1;
+    }
+
+    .chart-legend {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+
+    .chart-legend button {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-align: left;
+      background: #f5f8fb;
+      border: 1px solid #d9e2eb;
+      border-radius: 8px;
+      padding: 9px;
+      min-width: 0;
+      color: #17324d;
+      font: inherit;
+      cursor: pointer;
+    }
+
+    .chart-legend button:hover {
+      background: #eaf1f7;
+    }
+
+    .chart-legend button.is-hidden {
+      opacity: .48;
+      text-decoration: line-through;
+    }
+
+    .legend-swatch {
+      width: 18px;
+      height: 12px;
+      flex: none;
+      border: 2px solid;
+      border-radius: 2px;
+    }
+
+    .chart-wrap {
+      position: relative;
+      height: 480px;
+    }
+
+    a { color: #087eaa }
+
+    @media (max-width: 800px) {
+      .summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .chart-legend {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 6px;
+      }
+
+      .chart-legend button {
+        font-size: .85rem;
+        padding: 8px;
+      }
+
+      .chart-wrap {
+        height: 420px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      body {
+        margin: 22px auto;
+        padding: 0 12px;
+      }
+
+      .card {
+        padding: 16px;
+      }
+
+      .summary {
+        gap: 12px;
+      }
+
+      .total {
+        font-size: clamp(1rem, 4.5vw, 1.35rem);
+      }
+
+      .chart-wrap {
+        height: 380px;
+      }
     }
   </style>
 </head>
@@ -48,72 +169,74 @@
       <div class="metric-label">Aktuální objem</div>
       <div id="total" class="total">Načítám…</div>
     </div>
+
     <div>
       <div class="metric-label">Zaplnění kapacity</div>
       <div id="percent" class="total">Načítám…</div>
     </div>
+
     <div>
       <div class="metric-label">Zbývá do plné kapacity</div>
       <div id="remaining" class="total">Načítám…</div>
     </div>
+
     <div>
-      <div class="metric-label">Bilance za 24 hodin</div>
-      <div id="balance-24h" class="total balance-neutral">Načítám…</div>
+      <div class="metric-label">Bilance za přibližně 24 hodin</div>
+      <div id="balance" class="total">Načítám…</div>
+      <div id="balanceDetail" class="metric-detail"></div>
     </div>
-    <div>
-      <div class="metric-label">Bilance za 3 dny</div>
-      <div id="balance-3d" class="total balance-neutral">Načítám…</div>
-    </div>
-    <div>
-      <div class="metric-label">Bilance za 7 dní</div>
-      <div id="balance-7d" class="total balance-neutral">Načítám…</div>
-    </div>
-    <div>
-      <div class="metric-label">Bilance za 15 dní</div>
-      <div id="balance-15d" class="total balance-neutral">Načítám…</div>
-    </div>
-    <div>
-      <div class="metric-label">Bilance za 31 dní</div>
-      <div id="balance-31d" class="total balance-neutral">Načítám…</div>
-    </div>
+
     <div id="status" class="status"></div>
   </section>
 
   <section class="card">
-    <div id="chartLegend" class="chart-legend" aria-label="Zobrazit nebo skrýt nádrže v grafu"></div>
-    <canvas id="chart" aria-label="Vývoj objemu vody v jednotlivých nádržích Vltavské kaskády"></canvas>
+    <div id="chartLegend" class="chart-legend" aria-label="Zobrazit nebo skrýt nádrže"></div>
+    <div class="chart-wrap">
+      <canvas id="chart" aria-label="Vývoj objemu vody v jednotlivých nádržích Vltavské kaskády"></canvas>
+    </div>
   </section>
 
   <p class="status">
-    Zdroj: <a href="https://www.pvl.cz/portal/Nadrze/cz/pc/Objemy.aspx">Povodí Vltavy</a>.
-    Údaje PVL jsou bez záruky. <a href="data.csv">Stáhnout CSV</a>.
+    Zdroj:
+    <a href="https://www.pvl.cz/portal/Nadrze/cz/pc/Objemy.aspx">Povodí Vltavy</a>.
+    Údaje PVL jsou bez záruky.
+    <a href="data.csv">Stáhnout CSV</a>.
   </p>
 
   <script>
     fetch('data.csv?fresh=' + Date.now())
-      .then(r => {
-        if (!r.ok) throw Error('CSV není dostupné');
-        return r.text();
+      .then(response => {
+        if (!response.ok) throw Error('CSV není dostupné');
+        return response.text();
       })
       .then(text => {
-        const rows = text.trim().split(/\r?\n/).slice(1).map(line => line.split(';'));
-        const valid = rows.filter(r =>
-          r.length >= 11 &&
-          r[0] &&
-          Number.isFinite(Number(r[10])) &&
-          Number.isFinite(Date.parse(r[0]))
-        ).sort((a, b) => Date.parse(a[0]) - Date.parse(b[0]));
+        const rows = text.trim()
+          .split(/\r?\n/)
+          .slice(1)
+          .map(line => line.split(';'));
 
-        if (!valid.length) throw Error('Zatím nejsou uložena žádná měření.');
+        const valid = rows
+          .filter(row =>
+            row.length >= 11 &&
+            Number.isFinite(Date.parse(row[0])) &&
+            Number.isFinite(Number(row[10]))
+          )
+          .sort((a, b) => Date.parse(a[0]) - Date.parse(b[0]));
+
+        if (!valid.length) {
+          throw Error('Zatím nejsou uložena žádná měření.');
+        }
 
         const capacity = 823.27;
         const last = valid[valid.length - 1];
         const current = Number(last[10]);
         const remaining = Math.max(0, capacity - current);
-        const formatVolume = value => value.toLocaleString('cs-CZ', {
-          minimumFractionDigits: 3,
-          maximumFractionDigits: 3
-        });
+
+        const formatVolume = value =>
+          value.toLocaleString('cs-CZ', {
+            minimumFractionDigits: 3,
+            maximumFractionDigits: 3
+          });
 
         document.getElementById('total').textContent =
           formatVolume(current) + ' mil. m³';
@@ -127,67 +250,66 @@
         document.getElementById('remaining').textContent =
           formatVolume(remaining) + ' mil. m³';
 
-        // Každou bilanci počítáme vůči nejbližšímu měření k cílovému času.
-        const latestTime = Date.parse(last[0]);
-        const periods = [
-          { id: 'balance-24h', label: '24 hodinami', ms: 24 * 60 * 60 * 1000 },
-          { id: 'balance-3d', label: '3 dny', ms: 3 * 24 * 60 * 60 * 1000 },
-          { id: 'balance-7d', label: '7 dny', ms: 7 * 24 * 60 * 60 * 1000 },
-          { id: 'balance-15d', label: '15 dny', ms: 15 * 24 * 60 * 60 * 1000 },
-          { id: 'balance-31d', label: '31 dny', ms: 31 * 24 * 60 * 60 * 1000 }
-        ];
-
-        for (const period of periods) {
-          const targetTime = latestTime - period.ms;
-          let reference = null;
-          let closestDistance = Infinity;
-
-          for (const row of valid) {
-            const rowTime = Date.parse(row[0]);
-            const distance = Math.abs(rowTime - targetTime);
-
-            if (rowTime < latestTime && distance < closestDistance) {
-              reference = row;
-              closestDistance = distance;
-            }
-          }
-
-          const balanceEl = document.getElementById(period.id);
-          const allowedDistance = Math.max(2 * 60 * 60 * 1000, period.ms * 0.02);
-
-          if (reference && closestDistance <= allowedDistance) {
-            const change = current - Number(reference[10]);
-            const sign = change > 0 ? '+' : change < 0 ? '−' : '';
-
-            balanceEl.textContent =
-              sign + formatVolume(Math.abs(change)) + ' mil. m³';
-
-            balanceEl.classList.remove(
-              'balance-positive',
-              'balance-negative',
-              'balance-neutral'
-            );
-            balanceEl.classList.add(
-              change > 0 ? 'balance-positive' :
-              change < 0 ? 'balance-negative' :
-              'balance-neutral'
-            );
-
-            balanceEl.title =
-              'Oproti měření ' + new Date(reference[0]).toLocaleString('cs-CZ');
-          } else {
-            balanceEl.textContent = 'Nedostatek dat';
-            balanceEl.title =
-              'Chybí měření poblíž času před ' + period.label + '.';
-          }
-        }
-
         document.getElementById('status').textContent =
-          'Poslední měření: ' + new Date(last[0]).toLocaleString('cs-CZ') +
+          'Poslední měření: ' +
+          new Date(last[0]).toLocaleString('cs-CZ') +
           ' · ' + valid.length + ' záznamů';
 
-        const chartLabels = valid.map(r =>
-          new Date(r[0]).toLocaleString('cs-CZ', {
+        // Najde měření nejbližší okamžiku před 24 hodinami.
+        const latestTime = Date.parse(last[0]);
+        const targetTime = latestTime - 24 * 60 * 60 * 1000;
+
+        const reference = valid
+          .slice(0, -1)
+          .map(row => ({
+            row,
+            time: Date.parse(row[0])
+          }))
+          .reduce((best, item) => {
+            if (!best) return item;
+
+            return Math.abs(item.time - targetTime) <
+                   Math.abs(best.time - targetTime)
+              ? item
+              : best;
+          }, null);
+
+        const balanceElement = document.getElementById('balance');
+        const balanceDetail = document.getElementById('balanceDetail');
+
+        if (
+          reference &&
+          Math.abs(reference.time - targetTime) <= 90 * 60 * 1000
+        ) {
+          const difference = current - Number(reference.row[10]);
+          const elapsedHours = (latestTime - reference.time) / (60 * 60 * 1000);
+          const sign = difference > 0 ? '+' : difference < 0 ? '−' : '';
+
+          balanceElement.textContent =
+            sign + formatVolume(Math.abs(difference)) + ' mil. m³';
+
+          balanceElement.classList.remove('balance-up', 'balance-down', 'balance-same');
+
+          if (difference > 0) {
+            balanceElement.classList.add('balance-up');
+          } else if (difference < 0) {
+            balanceElement.classList.add('balance-down');
+          } else {
+            balanceElement.classList.add('balance-same');
+          }
+
+          balanceDetail.textContent =
+            'Oproti měření před přibližně ' +
+            Math.round(elapsedHours) + ' h';
+        } else {
+          balanceElement.textContent = 'Zatím není k dispozici';
+          balanceDetail.textContent =
+            'Pro výpočet je potřeba měření zhruba 24 hodin zpět.';
+          balanceElement.classList.add('balance-same');
+        }
+
+        const chartLabels = valid.map(row =>
+          new Date(row[0]).toLocaleString('cs-CZ', {
             day: '2-digit',
             month: '2-digit',
             hour: '2-digit',
@@ -197,24 +319,24 @@
         );
 
         const reservoirs = [
-          { name: 'VD Lipno 1', color: '#1769aa', fill: 'rgba(23,105,170,.62)' },
-          { name: 'VD Lipno 2', color: '#38a6c8', fill: 'rgba(56,166,200,.62)' },
-          { name: 'VD Hněvkovice', color: '#168a78', fill: 'rgba(22,138,120,.62)' },
-          { name: 'VD Kořensko', color: '#69a84f', fill: 'rgba(105,168,79,.62)' },
-          { name: 'VD Orlík', color: '#a4a832', fill: 'rgba(164,168,50,.62)' },
-          { name: 'VD Kamýk', color: '#d4a12f', fill: 'rgba(212,161,47,.62)' },
-          { name: 'VD Slapy', color: '#e07a19', fill: 'rgba(224,122,25,.62)' },
-          { name: 'VD Štěchovice', color: '#8757a8', fill: 'rgba(135,87,168,.62)' },
-          { name: 'VD Vrané', color: '#bd5a91', fill: 'rgba(189,90,145,.62)' }
+          { name: 'VD Lipno 1',    color: '#1769aa' },
+          { name: 'VD Lipno 2',    color: '#38a6c8' },
+          { name: 'VD Hněvkovice', color: '#168a78' },
+          { name: 'VD Kořensko',   color: '#69a84f' },
+          { name: 'VD Orlík',      color: '#a4a832' },
+          { name: 'VD Kamýk',      color: '#d4a12f' },
+          { name: 'VD Slapy',      color: '#e07a19' },
+          { name: 'VD Štěchovice', color: '#8757a8' },
+          { name: 'VD Vrané',      color: '#bd5a91' }
         ];
 
         const datasets = reservoirs.map((dam, index) => ({
           label: dam.name,
-          data: valid.map(r => Number(r[index + 1])),
+          data: valid.map(row => Number(row[index + 1])),
           borderColor: dam.color,
-          backgroundColor: dam.fill,
+          backgroundColor: dam.color,
           borderWidth: 1,
-          fill: 'stack',
+          fill: true,
           stack: 'reservoirs',
           tension: .12,
           pointRadius: 0,
@@ -234,12 +356,21 @@
 
         const chart = new Chart(document.getElementById('chart'), {
           type: 'line',
-          data: { labels: chartLabels, datasets },
+          data: {
+            labels: chartLabels,
+            datasets
+          },
           options: {
             responsive: true,
-            interaction: { intersect: false, mode: 'index' },
+            maintainAspectRatio: false,
+            interaction: {
+              intersect: false,
+              mode: 'index'
+            },
             plugins: {
-              legend: { display: false },
+              legend: {
+                display: false
+              },
               tooltip: {
                 callbacks: {
                   label: context =>
@@ -249,7 +380,8 @@
                     if (!items.length) return '';
                     const rowIndex = items[0].dataIndex;
                     return 'Součet: ' +
-                      formatVolume(Number(valid[rowIndex][10])) + ' mil. m³';
+                      formatVolume(Number(valid[rowIndex][10])) +
+                      ' mil. m³';
                   }
                 }
               }
@@ -266,78 +398,64 @@
                 min: 0,
                 max: 850,
                 stacked: true,
-                title: { display: true, text: 'mil. m³' }
+                title: {
+                  display: true,
+                  text: 'mil. m³'
+                }
               },
               capacity: {
                 min: 0,
                 max: 850,
                 display: false,
                 stacked: false,
-                grid: { drawOnChartArea: false }
+                grid: {
+                  drawOnChartArea: false
+                }
               }
             }
           }
         });
 
         const legend = document.getElementById('chartLegend');
-        const toggleItems = reservoirs.map((dam, index) => ({
-          label: dam.name,
-          color: dam.color,
-          fill: dam.fill,
-          datasetIndex: index
-        }));
 
-        toggleItems.push({
-          label: 'Celková kapacita',
-          color: '#e07a19',
-          fill: 'transparent',
-          datasetIndex: datasets.length - 1,
-          dashed: true
-        });
-
-        toggleItems.forEach(item => {
+        reservoirs.forEach((dam, index) => {
           const button = document.createElement('button');
+          const swatch = document.createElement('span');
+          const label = document.createElement('span');
+
           button.type = 'button';
           button.setAttribute('aria-pressed', 'true');
 
-          const swatchStyle = item.dashed
-            ? 'border-color:' + item.color +
-              ';border-style:dashed;background:transparent'
-            : 'border-color:' + item.color +
-              ';background:' + item.fill;
+          swatch.className = 'legend-swatch';
+          swatch.style.borderColor = dam.color;
+          swatch.style.backgroundColor = dam.color;
 
-          button.innerHTML =
-            '<span class="legend-swatch" style="' + swatchStyle +
-            '"></span>' + item.label;
+          label.textContent = dam.name;
+
+          button.appendChild(swatch);
+          button.appendChild(label);
 
           button.addEventListener('click', () => {
-            const visible = chart.isDatasetVisible(item.datasetIndex);
-            chart.setDatasetVisibility(item.datasetIndex, !visible);
+            const visible = chart.isDatasetVisible(index);
+
+            chart.setDatasetVisibility(index, !visible);
             button.classList.toggle('is-hidden', visible);
             button.setAttribute('aria-pressed', String(!visible));
+
             chart.update();
           });
 
           legend.appendChild(button);
         });
       })
-      .catch(e => {
+      .catch(error => {
         document.getElementById('total').textContent =
           'Data zatím nejsou k dispozici';
         document.getElementById('percent').textContent = '—';
         document.getElementById('remaining').textContent = '—';
-
-        [
-          'balance-24h',
-          'balance-3d',
-          'balance-7d',
-          'balance-15d',
-          'balance-31d'
-        ].forEach(id => {
-          document.getElementById(id).textContent = '—';
-        });
-
-        document.getElementById('status').textContent = e.message;
+        document.getElementById('balance').textContent = '—';
+        document.getElementById('balanceDetail').textContent = '';
+        document.getElementById('status').textContent = error.message;
       });
   </script>
 </body>
