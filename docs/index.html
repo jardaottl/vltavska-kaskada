@@ -420,9 +420,13 @@
                   footer: items => {
                     if (!items.length) return '';
 
-                    const rowIndex = items[0].dataIndex;
-                    return 'Součet: ' +
-                      formatVolume(Number(valid[rowIndex][10])) +
+                    const visibleSum = items.reduce((sum, item) => {
+                      const value = Number(item.raw);
+                      return sum + (Number.isFinite(value) ? value : 0);
+                    }, 0);
+
+                    return 'Součet zobrazených nádrží: ' +
+                      formatVolume(visibleSum) +
                       ' mil. m³';
                   }
                 }
