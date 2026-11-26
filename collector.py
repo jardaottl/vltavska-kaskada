@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import csv
 import html
-import json
 import re
+import ssl
 import urllib.request
+import certifi
 from datetime import datetime
 from html.parser import HTMLParser
 from pathlib import Path
@@ -20,6 +21,7 @@ EXPECTED = [
 ]
 OUT = Path("docs")
 CSV = OUT / "data.csv"
+ISSUER_CERT = Path("alpiro-intermediate.crt")
 
 
 def norm(s: str) -> str:
@@ -59,7 +61,16 @@ def fetch():
         "Accept-Language": "cs-CZ,cs;q=0.9",
     })
 
-    with urllib.request.urlopen(req, timeout=30) as response:
+    if not ISSUER_CERT.is_file():
+        raise FileNotFoundError(
+            f"PVL issuer certificate not found: {ISSUER_CERT}"
+        )
+
+    # Použije běžné certifikáty certifi i certifikát stažený workflow.
+    context = ssl.create_default_context(cafile=certifi.where())
+    context.load_verify_locations(cafile=str(ISSUER_CERT))
+
+    with urllib.request.urlopen(req, timeout=30, context=context) as response:
         page = response.read().decode(
             response.headers.get_content_charset() or "utf-8",
             "replace",
@@ -92,9 +103,9 @@ def fetch():
             continue
 
         # PVL přidalo sloupec „Účel“ před datum.
-        # Objem tak může být ve starém sloupci 4 (index 3)
+        # Objem může být ve starém sloupci 4 (index 3)
         # nebo v novém sloupci 5 (index 4). Datum přeskočíme,
-        # protože přijímáme pouze čistě číselnou hodnotu.
+        # protože přijímáme pouze číselnou hodnotu.
         volume = None
 
         for cell in row[3:5]:
