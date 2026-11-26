@@ -7,11 +7,13 @@ import html
 import re
 import ssl
 import urllib.request
-import certifi
 from datetime import datetime
 from html.parser import HTMLParser
 from pathlib import Path
 from zoneinfo import ZoneInfo
+
+import certifi
+
 
 URL = "https://www.pvl.cz/portal/Nadrze/cz/pc/Objemy.aspx?data=1"
 TZ = ZoneInfo("Europe/Prague")
@@ -27,6 +29,28 @@ ISSUER_CERT = Path("alpiro-intermediate.crt")
 def norm(s: str) -> str:
     s = html.unescape(s).replace("\xa0", " ").strip()
     return " ".join(s.split())
+
+
+def parse_measurement_time(cells):
+    """Extract a PVL timestamp from either the old or new table layout."""
+    for cell in cells:
+        raw = norm(cell).replace(" ", "")
+        match = re.fullmatch(
+            r"(\d{1,2}\.\d{1,2}\.\d{4})(\d{1,2}:\d{2}(?::\d{2})?)",
+            raw,
+        )
+        if not match:
+            continue
+
+        date_part, time_part = match.groups()
+        time_format = "%H:%M:%S" if time_part.count(":") == 2 else "%H:%M"
+        measured_at = datetime.strptime(
+            date_part + time_part,
+            "%d.%m.%Y" + time_format,
+        )
+        return measured_at.replace(tzinfo=TZ)
+
+    return None
 
 
 class Rows(HTMLParser):
@@ -66,7 +90,6 @@ def fetch():
             f"PVL issuer certificate not found: {ISSUER_CERT}"
         )
 
-    # Použije běžné certifikáty certifi i certifikát stažený workflow.
     context = ssl.create_default_context(cafile=certifi.where())
     context.load_verify_locations(cafile=str(ISSUER_CERT))
 
@@ -80,6 +103,7 @@ def fetch():
     parser.feed(page)
 
     found = {}
+    measured_times = {}
     expected = {
         re.sub(r"\s+", " ", name).casefold(): name
         for name in EXPECTED
@@ -102,43 +126,71 @@ def fetch():
         if not canonical or norm(row[1]).casefold() != "vltava":
             continue
 
-        # PVL přidalo sloupec „Účel“ před datum.
-        # Objem může být ve starém sloupci 4 (index 3)
-        # nebo v novém sloupci 5 (index 4). Datum přeskočíme,
-        # protože přijímáme pouze číselnou hodnotu.
-        volume = None
+        # Čas je ve starém rozložení buňka 3, po přidání „Účel“ buňka 4.
+        measured_at = parse_measurement_time(row[2:4])
 
+        # Objem je ve starém rozložení buňka 4, v novém buňka 5.
+        # Datum přeskočíme tím, že přijímáme jen číselnou hodnotu.
+        volume = None
         for cell in row[3:5]:
             candidate = norm(cell).replace(" ", "").replace(",", ".")
-
             if re.fullmatch(r"\d+(?:\.\d+)?", candidate):
                 volume = float(candidate)
                 break
 
-        if volume is None:
+        if volume is None or measured_at is None:
             continue
 
         found[canonical] = volume
+        measured_times[canonical] = measured_at
 
     missing = [name for name in EXPECTED if name not in found]
-
     if missing:
         raise RuntimeError(
             "PVL page did not provide filled-storage values for: "
             + ", ".join(missing)
         )
 
-    return found
+    missing_times = [name for name in EXPECTED if name not in measured_times]
+    if missing_times:
+        raise RuntimeError(
+            "PVL page did not provide measurement times for: "
+            + ", ".join(missing_times)
+        )
+
+    # Jeden řádek CSV obsahuje všech devět nádrží; použije se nejnovější
+    # čas měření z těchto nádrží jako čas bodu v grafu.
+    return found, max(measured_times.values())
+
+
+def add_collection_time_header():
+    """Add the new header without rewriting existing measurement rows."""
+    if not CSV.exists() or CSV.stat().st_size == 0:
+        return True
+
+    with CSV.open("r+", newline="", encoding="utf-8") as file:
+        header_line = file.readline()
+        header = next(csv.reader([header_line], delimiter=";"), [])
+
+        if "čas stažení" not in header:
+            remaining_data = file.read()
+            header.append("čas stažení")
+            file.seek(0)
+            writer = csv.writer(file, delimiter=";")
+            writer.writerow(header)
+            file.write(remaining_data)
+            file.truncate()
+
+    return False
 
 
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
 
-    values = fetch()
-    now = datetime.now(TZ).isoformat(timespec="seconds")
+    values, measured_at = fetch()
+    collected_at = datetime.now(TZ).isoformat(timespec="seconds")
+    new_file = add_collection_time_header()
     total = round(sum(values.values()), 3)
-
-    new_file = not CSV.exists() or CSV.stat().st_size == 0
 
     with CSV.open("a", newline="", encoding="utf-8") as file:
         writer = csv.writer(file, delimiter=";")
@@ -147,16 +199,19 @@ def main():
             writer.writerow(
                 ["čas"]
                 + [name.removeprefix("VD ") for name in EXPECTED]
-                + ["součet"]
+                + ["součet", "čas stažení"]
             )
 
         writer.writerow(
-            [now]
+            [measured_at.isoformat(timespec="minutes")]
             + [values[name] for name in EXPECTED]
-            + [total]
+            + [total, collected_at]
         )
 
-    print(f"{now}: saved {total:.3f} million m³")
+    print(
+        f"PVL measurement {measured_at.isoformat(timespec='minutes')}; "
+        f"collected {collected_at}; total {total:.3f} million m³"
+    )
 
 
 if __name__ == "__main__":
